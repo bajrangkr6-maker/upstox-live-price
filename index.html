@@ -3,70 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upstox Live Price on Firebase</title>
+    <title>Secret WhatsApp Chat</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 350px; }
-        h1 { color: #333; margin-bottom: 5px; font-size: 24px; }
-        .price { font-size: 40px; font-weight: bold; color: #2ec4b6; margin: 20px 0; }
-        .btn { background-color: #011627; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0b141a;
+            color: #e9edef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #222e35;
+            width: 100%;
+            max-width: 450px;
+            height: 90vh;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Lock Screen Style */
+        #lock-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+        .lock-icon { font-size: 50px; margin-bottom: 20px; }
+        h2 { margin-bottom: 20px; color: #00a884; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background-color: #2a3942;
+            color: #fff;
+            font-size: 16px;
+        }
+        input:focus { outline: 2px solid #00a884; }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: #00a884;
+            color: #111b21;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { background-color: #008f72; }
+
+        /* Chat Screen Style */
+        #chat-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        .chat-header {
+            background-color: #202c33;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #2a3942;
+        }
+        .chat-header h3 { color: #e9edef; }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* WhatsApp classic dark background */
+            background-blend-mode: overlay;
+            background-color: #0b141a;
+        }
+        
+        .message {
+            max-width: 75%;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 15px;
+            position: relative;
+            clear: both;
+        }
+        .message.sent {
+            background-color: #005c4b;
+            color: #e9edef;
+            float: right;
+        }
+        .message.received {
+            background-color: #202c33;
+            color: #e9edef;
+            float: left;
+        }
+        .message-user {
+            font-size: 12px;
+            color: #8696a0;
+            margin-bottom: 2px;
+            font-weight: bold;
+        }
+
+        .chat-input-area {
+            background-color: #202c33;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-input-area input { margin: 0; flex: 1; }
+        .chat-input-area button { margin: 0; width: auto; padding: 12px 20px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1 id="symbol">Loading...</h1>
-        <p>Firebase Live Price</p>
-        <div class="price" id="ltp">₹--.--</div>
-        <button class="btn" onclick="fetchPrice()">Refresh Price</button>
+    <div class="container">
+        <!-- 1. LOCK SCREEN -->
+        <div id="lock-screen">
+            <div class="lock-icon">🔒</div>
+            <h2>Secret Chat Room</h2>
+            <input type="text" id="username" placeholder="Apna Naam Likhein">
+            <input type="password" id="password" placeholder="Secret Password Dalein">
+            <button onclick="checkPassword()">Room Me Jayein</button>
+        </div>
+
+        <!-- 2. CHAT SCREEN (Shuru me hidden rahega) -->
+        <div id="chat-screen">
+            <div class="chat-header">
+                <h3>💬 Secret Lounge</h3>
+            </div>
+            <div class="chat-messages" id="chat-box">
+                <!-- Messages yahan dikhenge -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="msg-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
     </div>
 
     <script>
-      // ⚠️ YAHA APNA UPSTOX ACCESS TOKEN DALEIN
-const ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiIyQUEyTkQiLCJqdGkiOiI2YTMyY2MwN2IwYTIwZDM2MWRlZDlkZTYiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaWF0IjoxNzgxNzEzOTI3LCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE3ODE3MzM2MDB9.tJD6dHkBs1GQMSVecLJ0N_q6TI9GbYqlEybDtSFQD4U"; 
-const INSTRUMENT_KEY = "NSE_EQ|INE002A01018"; // Reliance
+        // Aapka Secret Password yahan set hai (Ise badal sakte hain)
+        const SECRET_PASSWORD = "MeraSecretPassword123"; 
+        
+        let user = "";
 
-async function fetchPrice() {
-    const ltpElement = document.getElementById('ltp');
-    ltpElement.innerText = "Fetching...";
-    
-    // Upstox LTP API ke liye direct key pass karke dekhte hain bina manually encode kiye URL string me
-    const url = `https://api.upstox.com/v2/market-quote/ltp?instrument_key=${INSTRUMENT_KEY}`;
+        // Password check karne ka function
+        function checkPassword() {
+            const nameInput = document.getElementById('username').value.trim();
+            const passInput = document.getElementById('password').value.trim();
 
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${ACCESS_TOKEN}`
+            if (nameInput === "" || passInput === "") {
+                alert("Naam aur Password dono zaroori hain!");
+                return;
             }
-        });
 
-        if (response.ok) {
-            const data = await response.json();
-            
-            // Upstox ka response format: data: { "NSE_EQ:RELIANCE": { last_price: 2500 } }
-            // Yahan dhyan dein: key me '|' ki jagah ':' hokar aata hai response me!
-            const responseKey = "NSE_EQ:RELIANCE"; // Ya fir dynamically check karein
-            
-            // Dynamically pehli key pakadte hain jo response me aayi hai
-            const actualKey = Object.keys(data.data)[0]; 
-            const price = data.data[actualKey].last_price;
-
-            document.getElementById('symbol').innerText = actualKey.replace(':', '|');
-            ltpElement.innerText = `₹${price}`;
-        } else {
-            // Agar abhi bhi error aaye toh exact status code pata chalega
-            const errorData = await response.json();
-            console.log("Upstox Error Response:", errorData);
-            ltpElement.innerText = `Error ${response.status}`;
+            if (passInput === SECRET_PASSWORD) {
+                user = nameInput;
+                // UI switch karein
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('chat-screen').style.display = 'flex';
+                
+                // Welcome message dikhayein
+                showSystemMessage(`Welcome ${user} to the secret chat!`);
+            } else {
+                alert("Galat Password! Dubara koshish karein.");
+            }
         }
-    } catch (error) {
-        ltpElement.innerText = "Error!";
-        console.error(error);
-    }
-}
-fetchPrice();
+
+        // Message send karne ka function
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const messageText = input.value.trim();
+
+            if (messageText === "") return;
+
+            const chatBox = document.getElementById('chat-box');
+
+            // 1. Apna message screen par dikhane ke liye
+            const messageHtml = `
+                <div class="message sent">
+                    <div class="message-user">You</div>
+                    <div>${messageText}</div>
+                </div>
+            `;
+            chatBox.innerHTML += messageHtml;
+
+            // Auto-scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+            input.value = "";
+
+            // 2. Ek dummy automatic reply (Kyunki abhi server nahi hai)
+            setTimeout(() => {
+                const replyHtml = `
+                    <div class="message received">
+                        <div class="message-user">Secret Bot</div>
+                        <div>Aapka message secure hai. (Yeh client-side simulation hai)</div>
+                    </div>
+                `;
+                chatBox.innerHTML += replyHtml;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 1000);
+        }
+
+        function showSystemMessage(text) {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<p style="text-align:center; color:#8696a0; font-size:13px; margin: 10px 0;">${text}</p>`;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
     </script>
 </body>
 </html>
