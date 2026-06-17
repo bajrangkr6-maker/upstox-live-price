@@ -22,39 +22,51 @@
     </div>
 
     <script>
-        // ⚠️ YAHA APNA UPSTOX ACCESS TOKEN DALEIN
-        const ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiIyQUEyTkQiLCJqdGkiOiI2YTMyY2MwN2IwYTIwZDM2MWRlZDlkZTYiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaWF0IjoxNzgxNzEzOTI3LCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE3ODE3MzM2MDB9.tJD6dHkBs1GQMSVecLJ0N_q6TI9GbYqlEybDtSFQD4U"; 
-        const INSTRUMENT_KEY = "NSE_EQ|INE002A01018"; // Reliance
+      // ⚠️ YAHA APNA UPSTOX ACCESS TOKEN DALEIN
+const ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiIyQUEyTkQiLCJqdGkiOiI2YTMyY2MwN2IwYTIwZDM2MWRlZDlkZTYiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaWF0IjoxNzgxNzEzOTI3LCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE3ODE3MzM2MDB9.tJD6dHkBs1GQMSVecLJ0N_q6TI9GbYqlEybDtSFQD4U"; 
+const INSTRUMENT_KEY = "NSE_EQ|INE002A01018"; // Reliance
 
-        async function fetchPrice() {
-            document.getElementById('ltp').innerText = "Fetching...";
-            const encodedKey = encodeURIComponent(INSTRUMENT_KEY);
-            const url = `https://api.upstox.com/v2/market-quote/ltp?instrument_key=${encodedKey}`;
+async function fetchPrice() {
+    const ltpElement = document.getElementById('ltp');
+    ltpElement.innerText = "Fetching...";
+    
+    // Upstox LTP API ke liye direct key pass karke dekhte hain bina manually encode kiye URL string me
+    const url = `https://api.upstox.com/v2/market-quote/ltp?instrument_key=${INSTRUMENT_KEY}`;
 
-            try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${ACCESS_TOKEN}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const responseKey = Object.keys(data.data)[0]; 
-                    const price = data.data[responseKey].last_price;
-
-                    document.getElementById('symbol').innerText = responseKey;
-                    document.getElementById('ltp').innerText = `₹${price}`;
-                } else {
-                    document.getElementById('ltp').innerText = "Error!";
-                }
-            } catch (error) {
-                document.getElementById('ltp').innerText = "Error!";
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${ACCESS_TOKEN}`
             }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Upstox ka response format: data: { "NSE_EQ:RELIANCE": { last_price: 2500 } }
+            // Yahan dhyan dein: key me '|' ki jagah ':' hokar aata hai response me!
+            const responseKey = "NSE_EQ:RELIANCE"; // Ya fir dynamically check karein
+            
+            // Dynamically pehli key pakadte hain jo response me aayi hai
+            const actualKey = Object.keys(data.data)[0]; 
+            const price = data.data[actualKey].last_price;
+
+            document.getElementById('symbol').innerText = actualKey.replace(':', '|');
+            ltpElement.innerText = `₹${price}`;
+        } else {
+            // Agar abhi bhi error aaye toh exact status code pata chalega
+            const errorData = await response.json();
+            console.log("Upstox Error Response:", errorData);
+            ltpElement.innerText = `Error ${response.status}`;
         }
-        fetchPrice();
+    } catch (error) {
+        ltpElement.innerText = "Error!";
+        console.error(error);
+    }
+}
+fetchPrice();
     </script>
 </body>
 </html>
