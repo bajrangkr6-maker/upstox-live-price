@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret WhatsApp Chat</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0b141a;
+            color: #e9edef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #222e35;
+            width: 100%;
+            max-width: 450px;
+            height: 90vh;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Lock Screen Style */
+        #lock-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+        .lock-icon { font-size: 50px; margin-bottom: 20px; }
+        h2 { margin-bottom: 20px; color: #00a884; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background-color: #2a3942;
+            color: #fff;
+            font-size: 16px;
+        }
+        input:focus { outline: 2px solid #00a884; }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: #00a884;
+            color: #111b21;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { background-color: #008f72; }
+
+        /* Chat Screen Style */
+        #chat-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        .chat-header {
+            background-color: #202c33;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #2a3942;
+        }
+        .chat-header h3 { color: #e9edef; }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* WhatsApp classic dark background */
+            background-blend-mode: overlay;
+            background-color: #0b141a;
+        }
+        
+        .message {
+            max-width: 75%;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 15px;
+            position: relative;
+            clear: both;
+        }
+        .message.sent {
+            background-color: #005c4b;
+            color: #e9edef;
+            float: right;
+        }
+        .message.received {
+            background-color: #202c33;
+            color: #e9edef;
+            float: left;
+        }
+        .message-user {
+            font-size: 12px;
+            color: #8696a0;
+            margin-bottom: 2px;
+            font-weight: bold;
+        }
+
+        .chat-input-area {
+            background-color: #202c33;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-input-area input { margin: 0; flex: 1; }
+        .chat-input-area button { margin: 0; width: auto; padding: 12px 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 1. LOCK SCREEN -->
+        <div id="lock-screen">
+            <div class="lock-icon">🔒</div>
+            <h2>Secret Chat Room</h2>
+            <input type="text" id="username" placeholder="Apna Naam Likhein">
+            <input type="password" id="password" placeholder="Secret Password Dalein">
+            <button onclick="checkPassword()">Room Me Jayein</button>
+        </div>
+
+        <!-- 2. CHAT SCREEN (Shuru me hidden rahega) -->
+        <div id="chat-screen">
+            <div class="chat-header">
+                <h3>💬 Secret Lounge</h3>
+            </div>
+            <div class="chat-messages" id="chat-box">
+                <!-- Messages yahan dikhenge -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="msg-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Aapka Secret Password yahan set hai (Ise badal sakte hain)
+        const SECRET_PASSWORD = "MeraSecretPassword123"; 
+        
+        let user = "";
+
+        // Password check karne ka function
+        function checkPassword() {
+            const nameInput = document.getElementById('username').value.trim();
+            const passInput = document.getElementById('password').value.trim();
+
+            if (nameInput === "" || passInput === "") {
+                alert("Naam aur Password dono zaroori hain!");
+                return;
+            }
+
+            if (passInput === SECRET_PASSWORD) {
+                user = nameInput;
+                // UI switch karein
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('chat-screen').style.display = 'flex';
+                
+                // Welcome message dikhayein
+                showSystemMessage(`Welcome ${user} to the secret chat!`);
+            } else {
+                alert("Galat Password! Dubara koshish karein.");
+            }
+        }
+
+        // Message send karne ka function
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const messageText = input.value.trim();
+
+            if (messageText === "") return;
+
+            const chatBox = document.getElementById('chat-box');
+
+            // 1. Apna message screen par dikhane ke liye
+            const messageHtml = `
+                <div class="message sent">
+                    <div class="message-user">You</div>
+                    <div>${messageText}</div>
+                </div>
+            `;
+            chatBox.innerHTML += messageHtml;
+
+            // Auto-scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+            input.value = "";
+
+            // 2. Ek dummy automatic reply (Kyunki abhi server nahi hai)
+            setTimeout(() => {
+                const replyHtml = `
+                    <div class="message received">
+                        <div class="message-user">Secret Bot</div>
+                        <div>Aapka message secure hai. (Yeh client-side simulation hai)</div>
+                    </div>
+                `;
+                chatBox.innerHTML += replyHtml;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 1000);
+        }
+
+        function showSystemMessage(text) {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<p style="text-align:center; color:#8696a0; font-size:13px; margin: 10px 0;">${text}</p>`;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
