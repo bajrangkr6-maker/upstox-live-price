@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upstox Live Price on Firebase</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 350px; }
+        h1 { color: #333; margin-bottom: 5px; font-size: 24px; }
+        .price { font-size: 40px; font-weight: bold; color: #2ec4b6; margin: 20px 0; }
+        .btn { background-color: #011627; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1 id="symbol">Loading...</h1>
+        <p>Firebase Live Price</p>
+        <div class="price" id="ltp">₹--.--</div>
+        <button class="btn" onclick="fetchPrice()">Refresh Price</button>
+    </div>
+
+    <script>
+        // ⚠️ YAHA APNA UPSTOX ACCESS TOKEN DALEIN
+        const ACCESS_TOKEN = "YOUR_ACCESS_TOKEN"; 
+        const INSTRUMENT_KEY = "NSE_EQ|INE002A01018"; // Reliance
+
+        async function fetchPrice() {
+            document.getElementById('ltp').innerText = "Fetching...";
+            const encodedKey = encodeURIComponent(INSTRUMENT_KEY);
+            const url = `https://api.upstox.com/v2/market-quote/ltp?instrument_key=${encodedKey}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${ACCESS_TOKEN}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const responseKey = Object.keys(data.data)[0]; 
+                    const price = data.data[responseKey].last_price;
+
+                    document.getElementById('symbol').innerText = responseKey;
+                    document.getElementById('ltp').innerText = `₹${price}`;
+                } else {
+                    document.getElementById('ltp').innerText = "Error!";
+                }
+            } catch (error) {
+                document.getElementById('ltp').innerText = "Error!";
+            }
+        }
+        fetchPrice();
+    </script>
+</body>
+</html>
